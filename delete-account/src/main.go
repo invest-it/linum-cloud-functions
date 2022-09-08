@@ -62,6 +62,19 @@ func deleteAccountSettings(ctx context.Context, uid string) {
 	}
 }
 
+func deleteUserIdEntry(ctx context.Context, uid string) {
+	update := []firestore.Update{
+		{
+			Path:  uid,
+			Value: firestore.Delete,
+		},
+	}
+	_, err := client.Collection("balance").Doc("documentToUser").Update(ctx, update)
+	if err != nil {
+		log.Fatalf("there was an error when deleting the userId entry: %v\n", err)
+	}
+}
+
 func DeleteUserData(ctx context.Context, e AuthEvent) error {
 	log.Printf("UserId: %s\n", e.UID)
 
@@ -88,8 +101,13 @@ func DeleteUserData(ctx context.Context, e AuthEvent) error {
 		log.Println("No entry was found for this UserId")
 	}
 
+	log.Println("Now deleting UserId entry in 'documentToUser'")
+	deleteUserIdEntry(ctx, e.UID)
+
 	log.Printf("Now deleting account-settings for UserId: %s\n", e.UID)
 	deleteAccountSettings(ctx, e.UID)
 
 	return nil
 }
+
+// TODO: Try to avoid log.fatal whenever possible
