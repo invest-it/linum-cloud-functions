@@ -10,6 +10,10 @@ import (
 
 var client *firestore.Client
 
+const COL_BALANCE = "balance"
+const COL_ACCOUNT_SETTINGS = "account_settings"
+const DOC_DOCUMENT_TO_USER = "documentToUser"
+
 // AuthEvent is the payload of a Firestore Auth event.
 type AuthEvent struct {
 	Email    string `json:"email"`
@@ -35,7 +39,7 @@ func init() {
 
 func deleteBalanceDataDocument(ref string, ctx context.Context) error {
 	log.Printf("Now deleting document with ReferenceId: %s\n", ref)
-	_, err := client.Collection("balance").Doc(ref).Delete(ctx)
+	_, err := client.Collection(COL_BALANCE).Doc(ref).Delete(ctx)
 	if err != nil {
 		log.Printf("there was an error deleting an document: %v\n", err)
 	}
@@ -56,7 +60,7 @@ func deleteBalanceDataDocuments(docRefs []string, ctx context.Context) int {
 }
 
 func deleteAccountSettings(ctx context.Context, uid string) {
-	_, err := client.Collection("account_settings").Doc(uid).Delete(ctx)
+	_, err := client.Collection(COL_ACCOUNT_SETTINGS).Doc(uid).Delete(ctx)
 	if err != nil {
 		log.Fatalf("there was an error while deleting the account settings: %v\n", err)
 	}
@@ -69,7 +73,7 @@ func deleteUserIdEntry(ctx context.Context, uid string) {
 			Value: firestore.Delete,
 		},
 	}
-	_, err := client.Collection("balance").Doc("documentToUser").Update(ctx, update)
+	_, err := client.Collection(COL_BALANCE).Doc(DOC_DOCUMENT_TO_USER).Update(ctx, update)
 	if err != nil {
 		log.Fatalf("there was an error when deleting the userId entry: %v\n", err)
 	}
@@ -78,7 +82,7 @@ func deleteUserIdEntry(ctx context.Context, uid string) {
 func DeleteUserData(ctx context.Context, e AuthEvent) error {
 	log.Printf("UserId: %s\n", e.UID)
 
-	docToUserSnapshot, err := client.Collection("balance").Doc("documentToUser").Get(ctx)
+	docToUserSnapshot, err := client.Collection(COL_BALANCE).Doc(DOC_DOCUMENT_TO_USER).Get(ctx)
 	if err != nil {
 		log.Fatalf("there was an error while fetching the doc 'documentToUser': %v\n", err)
 	}
