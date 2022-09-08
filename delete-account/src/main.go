@@ -53,6 +53,13 @@ func deleteBalanceDataDocuments(docRefs interface{}, ctx context.Context) int {
 	return errorCount
 }
 
+func deleteAccountSettings(ctx context.Context, uid string) {
+	_, err := client.Collection("account_settings").Doc(uid).Delete(ctx)
+	if err != nil {
+		log.Fatalf("there was an error while deleting the account settings: %v\n", err)
+	}
+}
+
 func DeleteUserData(ctx context.Context, e AuthEvent) error {
 	log.Printf("UserId: %s\n", e.UID)
 	// Currently this is
@@ -61,12 +68,14 @@ func DeleteUserData(ctx context.Context, e AuthEvent) error {
 	if ok {
 		errorCount := deleteBalanceDataDocuments(docRefs, ctx)
 		if errorCount > 0 {
-			log.Fatalf("there where errors deleting the users documents")
+			log.Fatal("there where errors deleting the users documents\n")
 		}
 	}
 	if err != nil {
 		log.Fatalf("there was an error while fetching the doc 'documentToUser': %v\n", err)
 	}
+	
+	deleteAccountSettings(ctx, e.UID)
 	// _, err = client.Collection("balance").Doc("documentToUser").Delete(ctx)
 	// if err != nil {
 	//	log.Fatalf("there was an error while the deleting the doc 'documentToUser': %v\n", err)
