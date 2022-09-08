@@ -32,6 +32,7 @@ func init() {
 }
 
 func deleteBalanceDataDocument(ref string, ctx context.Context) error {
+	log.Printf("Now deleting document with ReferenceId: %s\n", ref)
 	_, err := client.Collection("balance").Doc(ref).Delete(ctx)
 	log.Printf("there was an error deleting an document: %v\n", err)
 	// TODO: Handle those errors more specifically and don't abort the entire process
@@ -41,6 +42,7 @@ func deleteBalanceDataDocument(ref string, ctx context.Context) error {
 func deleteBalanceDataDocuments(docRefs interface{}, ctx context.Context) int {
 	errorCount := 0
 	refs, ok := docRefs.([]string)
+	log.Printf("Found %d documents for user\n", len(refs)) // TODO: Remove in prod
 	if ok {
 		for _, ref := range refs {
 			err := deleteBalanceDataDocument(ref, ctx)
@@ -62,10 +64,11 @@ func deleteAccountSettings(ctx context.Context, uid string) {
 
 func DeleteUserData(ctx context.Context, e AuthEvent) error {
 	log.Printf("UserId: %s\n", e.UID)
-	// Currently this is
+
 	docToUser, err := client.Collection("balance").Doc("documentToUser").Get(ctx)
 	docRefs, ok := docToUser.Data()["_uid"]
 	if ok {
+		log.Printf("Now deleting balance data for UserId: %s\n", e.UID)
 		errorCount := deleteBalanceDataDocuments(docRefs, ctx)
 		if errorCount > 0 {
 			log.Fatal("there where errors deleting the users documents\n")
@@ -74,12 +77,9 @@ func DeleteUserData(ctx context.Context, e AuthEvent) error {
 	if err != nil {
 		log.Fatalf("there was an error while fetching the doc 'documentToUser': %v\n", err)
 	}
-	
+
+	log.Printf("Now deleting account-settings for UserId: %s\n", e.UID)
 	deleteAccountSettings(ctx, e.UID)
-	// _, err = client.Collection("balance").Doc("documentToUser").Delete(ctx)
-	// if err != nil {
-	//	log.Fatalf("there was an error while the deleting the doc 'documentToUser': %v\n", err)
-	// }
 
 	return nil
 }
